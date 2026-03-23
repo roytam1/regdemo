@@ -543,14 +543,18 @@ static LONG InsertChildKeys(const KEYITEM *pParent, int nInsertIndex)
 {
     HKEY hKey;
     LONG lRet;
+    DWORD index;
+    DWORD cUnused;
     DWORD cSubKeys;
     DWORD cchMaxSubKey;
     DWORD cchMaxClass;
-    DWORD index;
     char *pszName;
     char *pszClass;
+    char szClassName[64];
+    DWORD cchClassLen = 64;
     DWORD cchNameAlloc;
     DWORD cchClassAlloc;
+    FILETIME ft;
 
     pszName = NULL;
     pszClass = NULL;
@@ -564,8 +568,8 @@ static LONG InsertChildKeys(const KEYITEM *pParent, int nInsertIndex)
     cSubKeys = 0;
     cchMaxSubKey = 0;
     cchMaxClass = 0;
-    lRet = RegQueryInfoKeyA(hKey, NULL, NULL, NULL, &cSubKeys, &cchMaxSubKey, &cchMaxClass,
-                            NULL, NULL, NULL, NULL, NULL);
+    lRet = RegQueryInfoKeyA(hKey, (LPSTR)szClassName, &cchClassLen, NULL, &cSubKeys, &cchMaxSubKey, &cchMaxClass,
+                            &cUnused, &cUnused, &cUnused, &cUnused, &ft);
     if (lRet == ERROR_CALL_NOT_IMPLEMENTED) { /* win32s hack */
         lRet = ERROR_SUCCESS;
         cchMaxClass = cchMaxSubKey = KEYNAMESIZE/4;
@@ -596,7 +600,7 @@ static LONG InsertChildKeys(const KEYITEM *pParent, int nInsertIndex)
         cchName = cchNameAlloc;
         cchClass = cchClassAlloc;
 
-        lRet = RegEnumKeyA(hKey, index, pszName, &cchName);
+        lRet = RegEnumKeyA(hKey, index, pszName, cchName);
         if (lRet == ERROR_MORE_DATA) {
             if (cchName + 2 > cchNameAlloc) {
                 cchNameAlloc = cchName + 2;
@@ -919,9 +923,13 @@ static LONG PopulateValuesForKey(HKEY hRoot, const char *pszSubPath)
 {
     HKEY hKey;
     LONG lRet;
+    DWORD cUnused;
     DWORD cValues;
     DWORD cchMaxValueName;
     DWORD cbMaxValueData;
+    char szClassName[64];
+    DWORD cchClassLen = 64;
+    FILETIME ft;
     ENUMVALUETEMP *pItems;
     int nCount;
     int nCapacity;
@@ -941,8 +949,8 @@ static LONG PopulateValuesForKey(HKEY hRoot, const char *pszSubPath)
     cValues = 0;
     cchMaxValueName = 0;
     cbMaxValueData = 0;
-    lRet = RegQueryInfoKeyA(hKey, NULL, NULL, NULL, NULL, NULL, NULL, &cValues,
-                            &cchMaxValueName, &cbMaxValueData, NULL, NULL);
+    lRet = RegQueryInfoKeyA(hKey, (LPSTR)szClassName, &cchClassLen, NULL, &cUnused, &cUnused, &cUnused, &cValues,
+                            &cchMaxValueName, &cbMaxValueData, &cUnused, &ft);
     if (lRet == ERROR_CALL_NOT_IMPLEMENTED) { /* win32s hack */
         lRet = ERROR_SUCCESS;
         cchMaxValueName = cbMaxValueData = KEYNAMESIZE/4;
