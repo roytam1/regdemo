@@ -137,8 +137,8 @@ static LONG AddRootKey(HKEY hRoot, const char *pszTitle);
 static KEYITEM *GetSelectedKeyItem(void);
 static VALUEITEM *GetSelectedValueItem(void);
 static const char *RegistryTypeName(DWORD dwType);
-static const char *RegistryErrorText(LONG lError);
-static void ShowRegistryError(HWND hwndOwner, LONG lError);
+static const char *RegistryErrorText(LONG lError, int id);
+static void ShowRegistryError(HWND hwndOwner, LONG lError, int id);
 static char *JoinSubPath(const char *pszParent, const char *pszChild);
 static char *BuildKeyDisplayText(const char *pszKeyName, int nLevel, char chMarker);
 static void DetermineSubkeyMarker(HKEY hRoot, const char *pszSubPath, int *pnHasSubkeys, int *pnAccessDenied);
@@ -418,41 +418,50 @@ static const char *RegistryTypeName(DWORD dwType)
     }
 }
 
-static const char *RegistryErrorText(LONG lError)
+static const char *RegistryErrorText(LONG lError, int id)
 {
-    static char szBuffer[80];
+    static char szBuffer[128];
 
     switch (lError) {
         case ERROR_BADDB:
         case 1015:
-            return "The Registry Database is corrupt!";
+            wsprintfA(szBuffer, "The Registry Database is corrupt! (%ld) #%d", lError, id);
+            break;
         case ERROR_FILE_NOT_FOUND:
         case ERROR_BADKEY:
-            return "Bad Key Name!";
+            wsprintfA(szBuffer, "Bad Key Name! (%ld) #%d", lError, id);
+            break;
         case ERROR_CANTOPEN:
-            return "Can't Open Key";
+            wsprintfA(szBuffer, "Can't Open Key (%ld) #%d", lError, id);
+            break;
         case ERROR_CANTREAD:
-            return "Can't Read Key";
+            wsprintfA(szBuffer, "Can't Read Key (%ld) #%d", lError, id);
+            break;
         case ERROR_ACCESS_DENIED:
-            return "Access to this key is denied.";
+            wsprintfA(szBuffer, "Access to this key is denied. (%ld) #%d", lError, id);
+            break;
         case ERROR_CANTWRITE:
-            return "Can't Write Key";
+            wsprintfA(szBuffer, "Can't Write Key (%ld) #%d", lError, id);
+            break;
         case ERROR_NOT_ENOUGH_MEMORY:
         case ERROR_OUTOFMEMORY:
-            return "Out of memory";
+            wsprintfA(szBuffer, "Out of memory (%ld) #%d", lError, id);
+            break;
         case ERROR_INVALID_PARAMETER:
-            return "Invalid Parameter";
+            wsprintfA(szBuffer, "Invalid Parameter (%ld) #%d", lError, id);
+            break;
         case ERROR_MORE_DATA:
-            return "Error - There is more data than the buffer can handle!";
+            wsprintfA(szBuffer, "Error - There is more data than the buffer can handle! (%ld) #%d", lError, id);
+            break;
         default:
-            wsprintfA(szBuffer, "Undefined Key Error Code %ld!", lError);
-            return szBuffer;
+            wsprintfA(szBuffer, "Undefined Key Error Code %ld! #%d", lError, id);
     }
+    return szBuffer;
 }
 
-static void ShowRegistryError(HWND hwndOwner, LONG lError)
+static void ShowRegistryError(HWND hwndOwner, LONG lError, int id)
 {
-    MessageBoxA(hwndOwner, RegistryErrorText(lError), APP_TITLE, MB_OK | MB_ICONEXCLAMATION);
+    MessageBoxA(hwndOwner, RegistryErrorText(lError, id), APP_TITLE, MB_OK | MB_ICONEXCLAMATION);
 }
 
 static char *JoinSubPath(const char *pszParent, const char *pszChild)
@@ -547,7 +556,7 @@ static LONG InsertChildKeys(const KEYITEM *pParent, int nInsertIndex)
 
     lRet = RegOpenKeyExA(pParent->hRoot, pParent->pszSubPath, 0, KEY_READ, &hKey);
     if (lRet != ERROR_SUCCESS) {
-        ShowRegistryError(g_app.hwndMain, lRet);
+        ShowRegistryError(g_app.hwndMain, lRet, 1);
         return lRet;
     }
 
@@ -558,7 +567,7 @@ static LONG InsertChildKeys(const KEYITEM *pParent, int nInsertIndex)
                             NULL, NULL, NULL, NULL, &ft);
     if (lRet != ERROR_SUCCESS) {
         RegCloseKey(hKey);
-        ShowRegistryError(g_app.hwndMain, lRet);
+        ShowRegistryError(g_app.hwndMain, lRet, 2);
         return lRet;
     }
 
@@ -601,7 +610,7 @@ static LONG InsertChildKeys(const KEYITEM *pParent, int nInsertIndex)
         }
 
         if (lRet != ERROR_SUCCESS) {
-            ShowRegistryError(g_app.hwndMain, lRet);
+            ShowRegistryError(g_app.hwndMain, lRet, 3);
             break;
         }
 
@@ -638,7 +647,7 @@ static LONG InsertChildKeys(const KEYITEM *pParent, int nInsertIndex)
                 FreeKeyItem(pChild);
                 free(pszDisplay);
                 lRet = ERROR_OUTOFMEMORY;
-                ShowRegistryError(g_app.hwndMain, lRet);
+                ShowRegistryError(g_app.hwndMain, lRet, 4);
                 break;
             }
 
@@ -920,7 +929,7 @@ static LONG PopulateValuesForKey(HKEY hRoot, const char *pszSubPath)
 
     lRet = RegOpenKeyExA(hRoot, pszSubPath, 0, KEY_READ, &hKey);
     if (lRet != ERROR_SUCCESS) {
-        ShowRegistryError(g_app.hwndMain, lRet);
+        ShowRegistryError(g_app.hwndMain, lRet, 5);
         return lRet;
     }
 
@@ -931,7 +940,7 @@ static LONG PopulateValuesForKey(HKEY hRoot, const char *pszSubPath)
                             &cchMaxValueName, &cbMaxValueData, NULL, NULL);
     if (lRet != ERROR_SUCCESS) {
         RegCloseKey(hKey);
-        ShowRegistryError(g_app.hwndMain, lRet);
+        ShowRegistryError(g_app.hwndMain, lRet, 6);
         return lRet;
     }
 
@@ -1009,7 +1018,7 @@ RetryEnumValue:
         }
 
         if (lRet != ERROR_SUCCESS && lRet != ERROR_MORE_DATA) {
-            ShowRegistryError(g_app.hwndMain, lRet);
+            ShowRegistryError(g_app.hwndMain, lRet, 7);
             free(pszNameBuf);
             free(pbDataBuf);
             break;
@@ -1074,7 +1083,7 @@ RetryEnumValue:
             pItems[i].pszRawName = NULL;
             free(pszRow);
             lRet = ERROR_OUTOFMEMORY;
-            ShowRegistryError(g_app.hwndMain, lRet);
+            ShowRegistryError(g_app.hwndMain, lRet, 8);
             break;
         }
 
@@ -1367,7 +1376,7 @@ static int DoEditValueModal(HWND hwndOwner, HKEY hRoot, const char *pszSubPath, 
 
     lRet = QueryValueData(hRoot, pszSubPath, pValueItem->pszValueName, &dwType, &pbData, &cbData);
     if (lRet != ERROR_SUCCESS) {
-        ShowRegistryError(hwndOwner, lRet);
+        ShowRegistryError(hwndOwner, lRet, 9);
         return IDCANCEL;
     }
 
@@ -1889,7 +1898,7 @@ static LRESULT CALLBACK EditWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM 
                         }
 
                         if (lRet != ERROR_SUCCESS) {
-                            ShowRegistryError(hwnd, lRet);
+                            ShowRegistryError(hwnd, lRet, 10);
                             return 0;
                         }
 
