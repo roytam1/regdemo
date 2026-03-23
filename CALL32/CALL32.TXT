@@ -1,0 +1,166 @@
+CALL32.DLL: 32-bit DLL calling library for Visual Basic
+by Peter Golde
+
+This program is placed in the public domain.
+Please feel free to redistribute as you wish.  
+No guarantees are made as to its suitability or
+usefulness, and no support can be provided.
+
+1. Summary
+----------
+
+CALL32.DLL is a DLL that can be used for calling routines in 32-bit
+DLLs on Windows NT.  It cannot be used on Windows 3.1, Win32s, Chicago,
+or other operating systems.  Using it, a Visual Basic program, running
+in the Win16 subsystem, can declare and call functions in any 32-bit
+DLL (including, but not limited to, the system DLLs).  CALL32.DLL works
+on both the x86 and MIPS versions on NT.  It has not been tested
+on Alpha or other versions, but should work.
+ 
+ 
+2. Usage
+--------
+
+To call a function in a 32-bit DLL, follow the following steps.  Declare
+the "Declare32" function as follows (all one one line):
+
+Declare Function Declare32 Lib "call32.dll" (ByVal Func$,
+       ByVal Library$, ByVal Args$) As Long
+
+Next, declare the function you wish to call.  Declare it in the ordinary 
+fashion, with the following exceptions:
+   - Use a library name of "call32.dll"
+   - Use an Alias of "Call32"
+   - Add an additional argument at the end, of type ByVal Long
+For example, if you are calling the function:
+  GetWindowText(HWND hwnd, LPSTR lpsz, int cch)
+declare it as follows (remember that ints and all handles are 32 bits,
+so use a Long):
+  Declare Function GetWindowText Lib "call32.dll" Alias "Call32"
+        (ByVal hwnd As Long, ByVal lpsz As String, 
+         ByVal cch As Long, ByVal id As Long) As Long
+
+In the initialization section of your application, you declare the
+actual library and name of the function you want to call with 
+the Declare32 function.  Pass it the name of the function, the
+library, and a string describing the argument types.  Each letter
+in the string declares the type of one argument, and should be
+either "i" for a 32 bit integer or handle type, "p" for any
+pointer type, or "w" for an HWND parameter you want to pass
+a 16 bit HWND to and have be automatically converted to a 32 bit
+HWND.  The return value of Declare32 should be saved away in 
+a global variable to be passed as the last parameter to the
+function you declared earlier.  So, continue the example, you
+would call:
+
+  idGetWindowText = Declare32("GetWindowText", "user32", "wpi")
+  
+(As a side note, this would be more properly declared as 
+"GetWindowTextA", since this is the real exported name.  However,
+Declare32 will automatically add an "A" to the end of a 
+function name if necessary).
+
+To call the function, you would just call:
+
+  cbCopy = GetWindowText(hwnd, sz, cb, idGetWindowText)   
+   
+   
+3. Data Types and Handles 
+-------------------------
+
+It is important to use the correct data types when calling DLL
+functions.  There are two important points to pay attention
+to when using CALL32.DLL.  First, only 32 bit integers can
+be passed to a DLL procedures.  Since virtually all 32 bit
+functions take int, UINT, LONG, DWORD, or HANDLE parameters,
+which are all 32 bits, this is not a major restriction.  However,
+you must remember to always declare functions arguments are
+Long, and not Integer.
+
+Secondly, 16 bit handles and 32 bit handles are not interchangable.
+For example, a 16 bit bitmap handle that you get from calling
+a 16 bit DLL or from the VB environment cannot be passed to
+a 32 bit function expecting a bitmap handle.  Similarly, a 
+32 bit handle gotten from a 32 bit function cannot be passed to a 
+16 bit DLL.  The only exception is window handles (HWND).  If
+you declare a function parameter with the "w" letter in the 
+argument description string passed to Declare32, the corresponding
+parameter will be automatically converted from a 16 bit HWND to
+a 32 bit HWND when the call is made.  You must still declare the
+argument as a LONG.  This is convenient, for example, when passing
+the value returned by the "hWnd" property of a control to a 
+32 bit DLL function.  Only windows created by your application
+can be translated.
+
+Summary of data types:
+
+C data type      Type specified in Declare   Character for Declare32
+
+int, UINT          ByVal Long                  i
+LONG, DWORD        ByVal Long                  i
+HANDLE             ByVal Long                  i
+WORD, short        not supported                 
+HWND               ByVal Long                  w (i for no 16->32
+                                                  translation)
+LPSTR              ByVal String                p
+LPLONG, LPDWORD,
+LPUINT, int FAR *  Long                        p
+LPWORD             Integer                     p
+
+
+4. Note on Declare32 function names
+-----------------------------------
+
+Declare32 will automatically try three different names for
+the function name you pass in.  First, it uses the exact
+name you pass in.  If that function name isn't found,
+it converts the name to the stdcall decorated name convention,
+by adding an underscore at the beginning, and adding "@nn" at
+the end, where "nn" is the number of bytes of arguments.  If
+that name isn't found, it adds an "A" to the end of the original
+name to try the Win32 ANSI function calling convention.
+
+
+5. Run-time Error Summary
+-------------------------
+
+The following run-time errors can be generated by CALL32.DLL
+
+30001   Can't load DLL: "|" (error=|)
+   The DLL name passed to Declare32 was not the name of a 
+   valid 32 bit DLL. The Win32 error code is specified at the
+   end of the error message, this can help determine why
+   the DLL didn't load.  
+   
+30002   Can't find specified function
+   The function name passed to Declare32 could not be found
+   in the DLL.
+   
+30003   Invalid parameter definition string
+   The parameter definition string passed to Declare32 had
+   an invalid character in it, or was too long (32 parameters
+   is the limit).
+   
+30004   Not running on Windows NT
+   The program is not running in the Windows16 subsystem of
+   Windows NT.
+   
+30005   Invalid window handle
+   The 16 bit window handle passed as a parameter declared
+   with the 'w' character was not a valid 16 bit window handle,
+   or refers to a window from a different process.  
+
+
+6.  Change History
+------------------
+
+1.00       Original Version
+(8/31/93)    
+
+1.01       Better error message when DLL can't be loaded
+(9/27/93)  Stdcall name decoration support
+           Source code available
+           Sample Bezier program from Adam Rauch
+    
+   
+   

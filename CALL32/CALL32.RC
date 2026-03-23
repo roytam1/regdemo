@@ -1,0 +1,30 @@
+#include <windows.h>
+#include <ver.h>
+
+VS_VERSION_INFO VERSIONINFO
+FILEVERSION	01,01,00,01 //<----- This is used by setup!
+PRODUCTVERSION	01,01,00,01
+FILEFLAGSMASK	0L
+FILEFLAGS	0L
+FILEOS		VOS_DOS_WINDOWS16
+FILETYPE	VFT_DLL
+FILESUBTYPE	0
+{
+   BLOCK "StringFileInfo"
+   {
+   BLOCK "040904E4" // Language and character set identifiers.
+      {
+      VALUE "Author",          "Peter Golde\0"
+      VALUE "FileDescription", "32-bit DLL calling library for Visual Basic\0"
+      VALUE "FileVersion",     "1.01\0"
+      VALUE "InternalName",    "CALL32.DLL\0"
+      VALUE "LegalCopyright",  "Public Domain\0"
+      VALUE "ProductName",     "32-bit DLL calling library for Visual Basic\0"
+      VALUE "ProductVersion",  "1.01\0"
+      }
+   }
+   BLOCK "VarFileInfo"
+      {
+      VALUE "Translation" ,0x409, 1252
+      }
+}
