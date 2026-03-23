@@ -104,6 +104,7 @@ typedef struct tagAPPSTATE {
     int currentValueNameWidth;
     int isWin9x;
     HICON hIcon;
+    WNDPROC groupBoxDefProc;
 } APPSTATE;
 
 static APPSTATE g_app;
@@ -153,6 +154,7 @@ static void LayoutMainWindow(int cx, int cy);
 static int DoEditValueModal(HWND hwndOwner, HKEY hRoot, const char *pszSubPath, const VALUEITEM *pValueItem);
 static LRESULT CALLBACK MainWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 static LRESULT CALLBACK EditWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+static LRESULT CALLBACK GroupBoxWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 static int TwipsX(int twips)
 {
@@ -1768,6 +1770,9 @@ static LRESULT CALLBACK EditWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM 
                                             xGroup + TwipsX(360), yGroup + TwipsY(540), TwipsX(1512), TwipsY(252),
                                             hwnd, (HMENU)IDC_RADIO_DEC, g_app.hInstance, NULL);
 
+            g_app.groupBoxDefProc = (WNDPROC)GetWindowLong(pCtx->hwndGroup, GWL_WNDPROC);
+            SetWindowLong(pCtx->hwndGroup, GWL_WNDPROC, (LPARAM)GroupBoxWndProc);
+
             ApplyUiFontToChildren(hwnd);
 
             SetWindowTextA(pCtx->hwndValueName,
@@ -1902,6 +1907,40 @@ static LRESULT CALLBACK EditWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM 
     }
 
     return DefWindowProcA(hwnd, uMsg, wParam, lParam);
+}
+
+static LRESULT CALLBACK GroupBoxWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
+    HBRUSH hBrush, hOldBrush;
+    HPEN hPen, hOldPen;
+    RECT rect;
+    HDC hDC;
+    HWND ghWnd;
+    COLORREF gWindowColor;
+
+    if (uMsg == WM_ERASEBKGND) {
+        hDC = GetDC(hwnd);
+
+        // Obtain a handle to the parent window's background brush.
+        hBrush = g_app.hbrFace;
+        hOldBrush = SelectObject(hDC, hBrush);
+
+        // Erase the group box's background.
+        GetClientRect(hwnd, &rect);
+        Rectangle(hDC, rect.left, rect.top, rect.right, rect.bottom);
+
+        FillRect(hDC,&rect, hBrush);
+
+        // Restore the original objects before releasing the DC.
+        SelectObject(hDC, hOldBrush);
+
+        ReleaseDC(hwnd, hDC);
+
+        // Instruct Windows to paint the group box text and frame.
+        InvalidateRect(hwnd, NULL, FALSE);
+
+        return TRUE; // Background has been erased.
+    }
+    return CallWindowProc(g_app.groupBoxDefProc, hwnd, uMsg, wParam, lParam);
 }
 
 int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
