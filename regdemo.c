@@ -321,7 +321,7 @@ static void FreeAllListItemData(HWND hwndList, int isValueList)
 
     for (i = 0; i < count; ++i) {
         pData = (void *)SendMessageA(hwndList, LB_GETITEMDATA, (WPARAM)i, 0);
-        if ((LONG_PTR)pData != LB_ERR && pData != NULL) {
+        if ((LONG_PTR)pData != (LONG_PTR)LB_ERR && pData != NULL) {
             if (isValueList) {
                 FreeValueItem((VALUEITEM *)pData);
             } else {
@@ -681,7 +681,7 @@ static void CollapseChildKeys(int nIndex)
     int i;
 
     pItem = (KEYITEM *)SendMessageA(g_app.hwndKeyList, LB_GETITEMDATA, (WPARAM)nIndex, 0);
-    if (pItem == NULL || (LONG_PTR)pItem == LB_ERR) {
+    if (pItem == NULL || (LONG_PTR)pItem == (LONG_PTR)LB_ERR) {
         return;
     }
 
@@ -691,7 +691,7 @@ static void CollapseChildKeys(int nIndex)
         KEYITEM *pChild;
 
         pChild = (KEYITEM *)SendMessageA(g_app.hwndKeyList, LB_GETITEMDATA, (WPARAM)i, 0);
-        if (pChild == NULL || (LONG_PTR)pChild == LB_ERR) {
+        if (pChild == NULL || (LONG_PTR)pChild == (LONG_PTR)LB_ERR) {
             break;
         }
         if (pChild->nLevel <= pItem->nLevel) {
@@ -1212,7 +1212,7 @@ static int FindValueListIndexByName(const char *pszValueName)
         VALUEITEM *pValue;
 
         pValue = (VALUEITEM *)SendMessageA(g_app.hwndValueList, LB_GETITEMDATA, (WPARAM)i, 0);
-        if (pValue == NULL || (LONG_PTR)pValue == LB_ERR) {
+        if (pValue == NULL || (LONG_PTR)pValue == (LONG_PTR)LB_ERR) {
             continue;
         }
         if (lstrcmpA(pValue->pszValueName, pszValueName) == 0) {
@@ -1659,7 +1659,7 @@ static LRESULT CALLBACK MainWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM 
                 }
 
                 pItem = (KEYITEM *)SendMessageA(g_app.hwndKeyList, LB_GETITEMDATA, (WPARAM)index, 0);
-                if (pItem == NULL || (LONG_PTR)pItem == LB_ERR) {
+                if (pItem == NULL || (LONG_PTR)pItem == (LONG_PTR)LB_ERR) {
                     return 0;
                 }
 
@@ -1670,7 +1670,7 @@ static LRESULT CALLBACK MainWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM 
                     pNext = NULL;
                 }
 
-                if (pNext != NULL && (LONG_PTR)pNext != LB_ERR && pNext->nLevel > pItem->nLevel) {
+                if (pNext != NULL && (LONG_PTR)pNext != (LONG_PTR)LB_ERR && pNext->nLevel > pItem->nLevel) {
                     CollapseChildKeys(index);
                 } else {
                     hOldCursor = SetCursor(LoadCursor(NULL, IDC_WAIT));
