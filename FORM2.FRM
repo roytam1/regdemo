@@ -1,19 +1,34 @@
-VERSION 2.00
-Begin Form Form2 
+VERSION 4.00
+Begin VB.Form Form2 
+   Appearance      =   0  'Flat
    BackColor       =   &H00C0C0C0&
+   BorderStyle     =   1  'Fixed Single
    Caption         =   "Form2"
-   ClientHeight    =   2784
+   ClientHeight    =   2790
    ClientLeft      =   4560
-   ClientTop       =   3816
+   ClientTop       =   3810
    ClientWidth     =   5520
-   Height          =   3108
-   Left            =   4512
+   BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
+      Name            =   "MS Sans Serif"
+      Size            =   8.25
+      Charset         =   0
+      Weight          =   700
+      Underline       =   0   'False
+      Italic          =   0   'False
+      Strikethrough   =   0   'False
+   EndProperty
+   ForeColor       =   &H80000008&
+   Height          =   3195
+   Left            =   4500
    LinkTopic       =   "Form2"
-   ScaleHeight     =   2784
+   MaxButton       =   0   'False
+   MinButton       =   0   'False
+   ScaleHeight     =   2790
    ScaleWidth      =   5520
-   Top             =   3540
-   Width           =   5616
-   Begin TextBox Text4 
+   Top             =   3465
+   Width           =   5640
+   Begin VB.TextBox Text4 
+      Appearance      =   0  'Flat
       Height          =   288
       Left            =   4080
       TabIndex        =   10
@@ -22,7 +37,8 @@ Begin Form Form2
       Visible         =   0   'False
       Width           =   492
    End
-   Begin TextBox Text3 
+   Begin VB.TextBox Text3 
+      Appearance      =   0  'Flat
       Height          =   288
       Left            =   3180
       TabIndex        =   9
@@ -31,18 +47,22 @@ Begin Form Form2
       Visible         =   0   'False
       Width           =   492
    End
-   Begin Frame Frame1 
+   Begin VB.Frame Frame1 
+      Appearance      =   0  'Flat
       BackColor       =   &H00C0C0C0&
       Caption         =   "Base"
+      ForeColor       =   &H80000008&
       Height          =   912
       Left            =   360
       TabIndex        =   7
       Top             =   1680
       Visible         =   0   'False
       Width           =   2232
-      Begin OptionButton Option1 
+      Begin VB.OptionButton Option1 
+         Appearance      =   0  'Flat
          BackColor       =   &H00C0C0C0&
          Caption         =   "Decimal"
+         ForeColor       =   &H80000008&
          Height          =   252
          Index           =   1
          Left            =   360
@@ -50,9 +70,11 @@ Begin Form Form2
          Top             =   540
          Width           =   1512
       End
-      Begin OptionButton Option1 
+      Begin VB.OptionButton Option1 
+         Appearance      =   0  'Flat
          BackColor       =   &H00C0C0C0&
          Caption         =   "Hexadecimal"
+         ForeColor       =   &H80000008&
          Height          =   252
          Index           =   0
          Left            =   360
@@ -62,7 +84,9 @@ Begin Form Form2
          Width           =   1512
       End
    End
-   Begin CommandButton Command1 
+   Begin VB.CommandButton Command1 
+      Appearance      =   0  'Flat
+      BackColor       =   &H80000005&
       Cancel          =   -1  'True
       Caption         =   "Cancel"
       Height          =   312
@@ -72,7 +96,9 @@ Begin Form Form2
       Top             =   1920
       Width           =   912
    End
-   Begin CommandButton Command1 
+   Begin VB.CommandButton Command1 
+      Appearance      =   0  'Flat
+      BackColor       =   &H80000005&
       Caption         =   "OK"
       Default         =   -1  'True
       Height          =   312
@@ -82,14 +108,16 @@ Begin Form Form2
       Top             =   1920
       Width           =   912
    End
-   Begin TextBox Text2 
+   Begin VB.TextBox Text2 
+      Appearance      =   0  'Flat
       Height          =   312
       Left            =   300
       TabIndex        =   4
       Top             =   1260
       Width           =   4812
    End
-   Begin TextBox Text1 
+   Begin VB.TextBox Text1 
+      Appearance      =   0  'Flat
       BackColor       =   &H00C0C0C0&
       Enabled         =   0   'False
       Height          =   312
@@ -98,18 +126,22 @@ Begin Form Form2
       Top             =   420
       Width           =   4812
    End
-   Begin Label Label1 
+   Begin VB.Label Label1 
+      Appearance      =   0  'Flat
       BackColor       =   &H00C0C0C0&
       Caption         =   "Value Data:"
+      ForeColor       =   &H80000008&
       Height          =   312
       Left            =   360
       TabIndex        =   3
       Top             =   840
       Width           =   1632
    End
-   Begin Label Label2 
+   Begin VB.Label Label2 
+      Appearance      =   0  'Flat
       BackColor       =   &H00C0C0C0&
       Caption         =   "Value Name:"
+      ForeColor       =   &H80000008&
       Height          =   252
       Left            =   360
       TabIndex        =   1
@@ -117,10 +149,13 @@ Begin Form Form2
       Width           =   2172
    End
 End
+Attribute VB_Name = "Form2"
+Attribute VB_Creatable = False
+Attribute VB_Exposed = False
 Option Explicit
 Dim bPainted%
 
-Sub Command1_Click (iIndex%)
+Private Sub Command1_Click(iIndex%)
     Dim nRtn&
     Dim hKey&
     Dim varTempVar
@@ -222,31 +257,31 @@ Sub Command1_Click (iIndex%)
                 'values in the same list.
                 '---------------------------------------------
                 sTempString = sTempString & Space$(iList2Tab - Len(sValueName) + 1) & sValueData
-                iTempInt = form1!List2.ListIndex
+                iTempInt = Form1!List2.ListIndex
 
                 '---------------------------------------------
                 'Remove the old, add the new.
                 '---------------------------------------------
-                form1!List2.RemoveItem iTempInt
-                form1!List2.AddItem sTempString, iTempInt
-                form1!List2.ListIndex = iTempInt
+                Form1!List2.RemoveItem iTempInt
+                Form1!List2.AddItem sTempString, iTempInt
+                Form1!List2.ListIndex = iTempInt
             End If
-            Unload form2
+            Unload Form2
     
         Case 1
             
             '-------------------------------------------------
             'Cancel was clicked
             '-------------------------------------------------
-            Unload form2
+            Unload Form2
     End Select
 End Sub
 
-Sub Form_Load ()
+Private Sub Form_Load()
     CenterForm Me
 End Sub
 
-Sub Form_Paint ()
+Private Sub Form_Paint()
     If Not bPainted Then
         bPainted = True
         text2.SelStart = 0
@@ -254,11 +289,11 @@ Sub Form_Paint ()
     End If
 End Sub
 
-Sub Form_Unload (Cancel As Integer)
+Private Sub Form_Unload(Cancel As Integer)
 bPainted = False
 End Sub
 
-Sub Option1_Click (iIndex%)
+Private Sub Option1_Click(iIndex%)
 Select Case iIndex
     Case 0
         

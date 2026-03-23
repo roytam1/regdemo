@@ -1,6 +1,0 @@
-REGDEMO.FRM
-REGMODUL.BAS
-FORM2.FRM
-ProjWinSize=84,412,228,128
-ProjWinShow=2
-IconForm="Form1"

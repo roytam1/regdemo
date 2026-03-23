@@ -1,62 +1,79 @@
-VERSION 2.00
-Begin Form Form1 
+VERSION 4.00
+Begin VB.Form Form1 
+   Appearance      =   0  'Flat
    BackColor       =   &H00C0C0C0&
    Caption         =   "Win32 RegDemo"
    ClientHeight    =   4980
    ClientLeft      =   1200
-   ClientTop       =   1668
-   ClientWidth     =   7584
-   FontBold        =   -1  'True
-   FontItalic      =   0   'False
-   FontName        =   "Courier New"
-   FontSize        =   7.8
-   FontStrikethru  =   0   'False
-   FontUnderline   =   0   'False
-   Height          =   5304
-   Icon            =   REGDEMO.FRX:0000
-   Left            =   1152
+   ClientTop       =   1665
+   ClientWidth     =   7590
+   BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
+      Name            =   "Courier New"
+      Size            =   8.25
+      Charset         =   0
+      Weight          =   400
+      Underline       =   0   'False
+      Italic          =   0   'False
+      Strikethrough   =   0   'False
+   EndProperty
+   ForeColor       =   &H80000008&
+   Height          =   5385
+   Icon            =   "REGDEMO.frx":0000
+   Left            =   1140
    LinkTopic       =   "Form1"
    ScaleHeight     =   4980
-   ScaleWidth      =   7584
-   Top             =   1392
-   Width           =   7680
-   Begin CommandButton Command1 
+   ScaleWidth      =   7590
+   Top             =   1320
+   Width           =   7710
+   Begin VB.CommandButton Command1 
+      Appearance      =   0  'Flat
+      BackColor       =   &H80000005&
       Caption         =   "Exit"
+      BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
+         Name            =   "MS Sans Serif"
+         Size            =   8.25
+         Charset         =   0
+         Weight          =   700
+         Underline       =   0   'False
+         Italic          =   0   'False
+         Strikethrough   =   0   'False
+      EndProperty
       Height          =   372
       Left            =   6180
       TabIndex        =   8
       Top             =   4560
       Width           =   972
    End
-   Begin ListBox List2 
-      FontBold        =   -1  'True
-      FontItalic      =   0   'False
-      FontName        =   "Courier New"
-      FontSize        =   7.8
-      FontStrikethru  =   0   'False
-      FontUnderline   =   0   'False
-      Height          =   3864
+   Begin VB.ListBox List2 
+      Appearance      =   0  'Flat
+      Height          =   3735
       Left            =   3540
       TabIndex        =   1
       Top             =   300
-      Width           =   3972
+      Width           =   3975
    End
-   Begin ListBox List1 
-      FontBold        =   -1  'True
-      FontItalic      =   0   'False
-      FontName        =   "Courier New"
-      FontSize        =   7.8
-      FontStrikethru  =   0   'False
-      FontUnderline   =   0   'False
-      Height          =   3864
+   Begin VB.ListBox List1 
+      Appearance      =   0  'Flat
+      Height          =   3735
       Left            =   0
       TabIndex        =   0
       Top             =   300
-      Width           =   3492
+      Width           =   3495
    End
-   Begin Label Label5 
+   Begin VB.Label Label5 
+      Appearance      =   0  'Flat
       BackColor       =   &H00C0C0C0&
       Caption         =   "* means key cannot be opened"
+      BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
+         Name            =   "MS Sans Serif"
+         Size            =   8.25
+         Charset         =   0
+         Weight          =   700
+         Underline       =   0   'False
+         Italic          =   0   'False
+         Strikethrough   =   0   'False
+      EndProperty
+      ForeColor       =   &H80000008&
       Height          =   252
       Index           =   1
       Left            =   240
@@ -64,9 +81,20 @@ Begin Form Form1
       Top             =   4680
       Width           =   2772
    End
-   Begin Label Label5 
+   Begin VB.Label Label5 
+      Appearance      =   0  'Flat
       BackColor       =   &H00C0C0C0&
       Caption         =   "+ means additional keys"
+      BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
+         Name            =   "MS Sans Serif"
+         Size            =   8.25
+         Charset         =   0
+         Weight          =   700
+         Underline       =   0   'False
+         Italic          =   0   'False
+         Strikethrough   =   0   'False
+      EndProperty
+      ForeColor       =   &H80000008&
       Height          =   252
       Index           =   0
       Left            =   240
@@ -74,36 +102,80 @@ Begin Form Form1
       Top             =   4440
       Width           =   2772
    End
-   Begin Label Label4 
+   Begin VB.Label Label4 
+      Appearance      =   0  'Flat
       BackColor       =   &H00C0C0C0&
       Caption         =   "Double-Click a Value to edit it"
+      BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
+         Name            =   "MS Sans Serif"
+         Size            =   8.25
+         Charset         =   0
+         Weight          =   700
+         Underline       =   0   'False
+         Italic          =   0   'False
+         Strikethrough   =   0   'False
+      EndProperty
+      ForeColor       =   &H80000008&
       Height          =   252
       Left            =   4020
       TabIndex        =   5
       Top             =   4200
       Width           =   3312
    End
-   Begin Label Label3 
+   Begin VB.Label Label3 
+      Appearance      =   0  'Flat
       BackColor       =   &H00C0C0C0&
       Caption         =   "Double-Click a Key to expand it"
+      BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
+         Name            =   "MS Sans Serif"
+         Size            =   8.25
+         Charset         =   0
+         Weight          =   700
+         Underline       =   0   'False
+         Italic          =   0   'False
+         Strikethrough   =   0   'False
+      EndProperty
+      ForeColor       =   &H80000008&
       Height          =   252
       Left            =   120
       TabIndex        =   4
       Top             =   4200
       Width           =   3612
    End
-   Begin Label Label2 
+   Begin VB.Label Label2 
+      Appearance      =   0  'Flat
       BackColor       =   &H00C0C0C0&
       Caption         =   "Value Data"
+      BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
+         Name            =   "MS Sans Serif"
+         Size            =   8.25
+         Charset         =   0
+         Weight          =   700
+         Underline       =   0   'False
+         Italic          =   0   'False
+         Strikethrough   =   0   'False
+      EndProperty
+      ForeColor       =   &H80000008&
       Height          =   192
       Left            =   3660
       TabIndex        =   3
       Top             =   60
       Width           =   1692
    End
-   Begin Label Label1 
+   Begin VB.Label Label1 
+      Appearance      =   0  'Flat
       BackColor       =   &H00C0C0C0&
       Caption         =   "Key Name"
+      BeginProperty Font {0BE35203-8F91-11CE-9DE3-00AA004BB851} 
+         Name            =   "MS Sans Serif"
+         Size            =   8.25
+         Charset         =   0
+         Weight          =   700
+         Underline       =   0   'False
+         Italic          =   0   'False
+         Strikethrough   =   0   'False
+      EndProperty
+      ForeColor       =   &H80000008&
       Height          =   192
       Left            =   60
       TabIndex        =   2
@@ -111,21 +183,24 @@ Begin Form Form1
       Width           =   1272
    End
 End
+Attribute VB_Name = "Form1"
+Attribute VB_Creatable = False
+Attribute VB_Exposed = False
 Option Explicit
 Dim lMainKey&
-Dim sSubkey$
+Dim sSubKey$
 Dim iLevel%
 Dim iX%
 Dim iY%
 Dim sLevelSpaces$
 Dim iListIdx%
 
-Sub Command1_Click ()
+Private Sub Command1_Click()
     'We want out!
     Unload Form1
 End Sub
 
-Sub Form_Load ()
+Private Sub Form_Load()
     Dim lVerNum&
     Dim iVerWord%
     Dim iVersNum%
@@ -141,22 +216,11 @@ Sub Form_Load ()
     lVerNum = GetVersion()
     iVerWord = CInt(lVerNum And &HFFFF&)
     iVersNum = (iVerWord And &HFF) * 100 + CInt(iVerWord / 256)
-	If GetWinFlags() And WF_WINNT Then
-	    iWinVers = WinNT
-	Else
-	    'At this time, Win95 reports version 3.95
-	    'when queried by 16-bit programs.  It returns
-	    '4.00 when queried by 32-bit programs.
-	    If iVersNum < 390 Then
-		iWinVers = Win16
-	    Else
-		iWinVers = Win32
-	    End If
-	End If
-    If iWinVers = Win16 Then
-	MsgBox "This program is intended only for use with 32-bit Windows versions."
-	Unload Form1
-    End If
+        If lVerNum < &H80000000 Then
+            iWinVers = WinNT
+        Else
+            iWinVers = Win32
+        End If
     
     '-----------------------------------------------------
     'Set all fonts to same, so horizontal scrollbars will work
@@ -180,22 +244,22 @@ Sub Form_Load ()
     'HKEY_PERFORMANCE_DATA does not respond in a normal fashion
     'to key queries.  Note it does not appear in REGEDT32.
     'If iWinVers = WinNT Then
-	'list1.AddItem "HKEY_PERFORMANCE_DATA"
+        'list1.AddItem "HKEY_PERFORMANCE_DATA"
     'End If
     '-----------------------------------------------------
     If iWinVers = Win32 Then
-	List1.AddItem "HKEY_CURRENT_CONFIG"
-	List1.AddItem "HKEY_DYN_DATA"
+        List1.AddItem "HKEY_CURRENT_CONFIG"
+        List1.AddItem "HKEY_DYN_DATA"
     End If
     
     '-----------------------------------------------------
     'Setup hourglass cursor
     '-----------------------------------------------------
-    iWaitCursor = loadcursor(0, IDC_WAIT)
+    iWaitCursor = LoadCursor(0, IDC_WAIT)
 
 End Sub
 
-Sub Form_Resize ()
+Private Sub Form_Resize()
 
     '-----------------------------------------------------
     'Resize controls when the user resizes the form.
@@ -220,7 +284,7 @@ ReSizeError:
 
 End Sub
 
-Sub List1_Click ()
+Private Sub List1_Click()
 
     '-----------------------------------------------------
     'Empty the value list.
@@ -239,67 +303,67 @@ Sub List1_Click ()
     iLevel = 0
     
     If Left$(List1.List(List1.ListIndex), 1) <> Chr$(32) Then
-	
-	'-------------------------------------------------
-	'Subkeys will all have spaces at their beginning (because
-	'that is how we will add them), so this is a top level key.
-	'-------------------------------------------------
-	lMainKey = GetMainKey(CStr(List1.List(List1.ListIndex)))
-	sSubkey = ""
+        
+        '-------------------------------------------------
+        'Subkeys will all have spaces at their beginning (because
+        'that is how we will add them), so this is a top level key.
+        '-------------------------------------------------
+        lMainKey = GetMainKey(CStr(List1.List(List1.ListIndex)))
+        sSubKey = ""
     Else
-	
-	'-------------------------------------------------
-	'This must be a subkey.
-	'-------------------------------------------------
-	sSubkey = List1.List(List1.ListIndex)
+        
+        '-------------------------------------------------
+        'This must be a subkey.
+        '-------------------------------------------------
+        sSubKey = List1.List(List1.ListIndex)
     
-	'-------------------------------------------------
-	'Strip the leading spaces and count how many
-	'-------------------------------------------------
-	Do Until Left$(sSubkey, 1) <> Chr$(32)
-	    iLevel = iLevel + 1
-	    sSubkey = Right$(sSubkey, Len(sSubkey) - 1)
-	Loop
+        '-------------------------------------------------
+        'Strip the leading spaces and count how many
+        '-------------------------------------------------
+        Do Until Left$(sSubKey, 1) <> Chr$(32)
+            iLevel = iLevel + 1
+            sSubKey = Right$(sSubKey, Len(sSubKey) - 1)
+        Loop
     
-	'-------------------------------------------------
-	'if there are any indicator characters which we have
-	'introduced, strip them off.
-	'-------------------------------------------------
-	If Left$(sSubkey, 1) = "+" Or Left$(sSubkey, 1) = "*" Then
-	    sSubkey = Right$(sSubkey, Len(sSubkey) - 1)
-	End If
+        '-------------------------------------------------
+        'if there are any indicator characters which we have
+        'introduced, strip them off.
+        '-------------------------------------------------
+        If Left$(sSubKey, 1) = "+" Or Left$(sSubKey, 1) = "*" Then
+            sSubKey = Right$(sSubKey, Len(sSubKey) - 1)
+        End If
     
-	'-------------------------------------------------
-	'We indented 4 spaces per level when we added this subkey.
-	'-------------------------------------------------
-	iLevel = iLevel / 4
-	For iX = iLevel To 1 Step -1
-	    
-	    '---------------------------------------------
-	    'Build the complete key name by moving up the
-	    'tree getting subkey names each time the indentation
-	    'changes, until we run into a main key (no leading spaces).
-	    '---------------------------------------------
-	    sLevelSpaces = Space$(iX * 4)
-	    iY = iListIdx
-	    Do Until Left$(List1.List(iY), Len(sLevelSpaces)) <> sLevelSpaces
-		iY = iY - 1
-	    Loop
-	    If Left$(List1.List(iY), 1) <> Chr$(32) Then
-		lMainKey = GetMainKey(CStr(List1.List(iY)))
-	    Else
-		sSubkey = LTrim$(List1.List(iY)) & "\" & sSubkey
-		If Left$(sSubkey, 1) = "+" Then
-		    sSubkey = Right$(sSubkey, Len(sSubkey) - 1)
-		End If
-	    End If
-	Next
+        '-------------------------------------------------
+        'We indented LIST_INDENT = 2 spaces per level when we added this subkey.
+        '-------------------------------------------------
+        iLevel = iLevel / LIST_INDENT
+        For iX = iLevel To 1 Step -1
+            
+            '---------------------------------------------
+            'Build the complete key name by moving up the
+            'tree getting subkey names each time the indentation
+            'changes, until we run into a main key (no leading spaces).
+            '---------------------------------------------
+            sLevelSpaces = Space$(iX * LIST_INDENT)
+            iY = iListIdx
+            Do Until Left$(List1.List(iY), Len(sLevelSpaces)) <> sLevelSpaces
+                iY = iY - 1
+            Loop
+            If Left$(List1.List(iY), 1) <> Chr$(32) Then
+                lMainKey = GetMainKey(CStr(List1.List(iY)))
+            Else
+                sSubKey = LTrim$(List1.List(iY)) & "\" & sSubKey
+                If Left$(sSubKey, 1) = "+" Then
+                    sSubKey = Right$(sSubKey, Len(sSubKey) - 1)
+                End If
+            End If
+        Next
     End If
     
     '-----------------------------------------------------
     'Now enumerate all values belonging to this key
     '-----------------------------------------------------
-    lTempLong = RegEnumValues(lMainKey, sSubkey)
+    lTempLong = RegEnumValues(lMainKey, sSubKey)
     
     '-----------------------------------------------------
     'If the user double-clicked, we will proceed on
@@ -307,7 +371,7 @@ Sub List1_Click ()
     '-----------------------------------------------------
 End Sub
 
-Sub List1_DblClick ()
+Private Sub List1_DblClick()
     
     '----------------------------------------------------------
     'Double-Click event occurs after the Click event, so
@@ -318,7 +382,7 @@ Sub List1_DblClick ()
     Dim bAlreadyExpanded%
     Dim iListWidth%
     
-    sLevelSpaces = Space$((iLevel + 1) * 4)
+    sLevelSpaces = Space$((iLevel + 1) * LIST_INDENT)
     iX = iListIdx + 1
     
     '----------------------------------------------------------
@@ -327,44 +391,45 @@ Sub List1_DblClick ()
     'the tree until there are no subkeys to the current subkey.
     '----------------------------------------------------------
     Do Until Left$(List1.List(iX), Len(sLevelSpaces)) <> sLevelSpaces
-	List1.RemoveItem iX
-	bAlreadyExpanded = True
+        List1.RemoveItem iX
+        bAlreadyExpanded = True
     Loop
     
     '----------------------------------------------------------
     'If we collapsed the tree, we are done
     '----------------------------------------------------------
     If bAlreadyExpanded Then
-	Exit Sub
+        Exit Sub
     End If
     
     '----------------------------------------------------------
     'Otherwise we want to expand the tree one level
     '----------------------------------------------------------
-    lTempLong = RegEnumKeys(lMainKey, sSubkey, iLevel, iListIdx + 1)
+    lTempLong = RegEnumKeys(lMainKey, sSubKey, iLevel, iListIdx + 1)
     
     '----------------------------------------------------------
     'Set Horizontal Scrollbar if necessary
     '----------------------------------------------------------
-    iTempInt = SendMessage(List1.hWnd, LB_SETHORIZONTALEXTENT, iListWidth, 0&)
+    iTempInt = SendMessage(List1.hwnd, LB_SETHORIZONTALEXTENT, iListWidth, 0&)
+    Dim lpSize As SIZE
     For iX = 0 To List1.ListCount - 1
-	lTempLong = GetTextExtent(hDC, List1.List(iX), Len(List1.List(iX)))
-	iTempInt = WordLo(lTempLong)
-	If iTempInt > iListWidth Then
-	    iListWidth = iTempInt
-	    iTempInt = SendMessage(List1.hWnd, LB_SETHORIZONTALEXTENT, iListWidth, 0&)
-	End If
+        lTempLong = GetTextExtentPoint(hDC, List1.List(iX), Len(List1.List(iX)), lpSize)
+        iTempInt = lpSize.cx
+        If iTempInt > iListWidth Then
+            iListWidth = iTempInt
+            iTempInt = SendMessage(List1.hwnd, LB_SETHORIZONTALEXTENT, iListWidth, 0&)
+        End If
     Next iX
 
 
 End Sub
 
-Sub List2_DblClick ()
+Private Sub List2_DblClick()
 
     '----------------------------------------------------------
     'Call EditRegValue to load the value into the editor.
     '----------------------------------------------------------
-    EditRegValue lMainKey, sSubkey, CLng(List2.ListIndex)
+    EditRegValue lMainKey, sSubKey, CLng(List2.ListIndex)
 
 End Sub
 
