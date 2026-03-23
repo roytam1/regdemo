@@ -43,6 +43,18 @@
 #define ARRAYSIZE(a) (sizeof(a) / sizeof((a)[0]))
 #endif
 
+#ifndef LONG_PTR
+#define LONG_PTR LPVOID
+#endif
+
+#ifndef ICON_BIG
+#define ICON_BIG 1
+#endif
+
+#ifndef ICON_SMALL
+#define ICON_SMALL 0
+#endif
+
 typedef struct tagKEYITEM {
     HKEY hRoot;
     char *pszSubPath;
