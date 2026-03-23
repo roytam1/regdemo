@@ -17,6 +17,8 @@
 #define NAME_DEFAULT        "(Default)"
 #define NAME_DEFAULT_LEN    9
 
+#define KEYNAMESIZE 300
+
 #define IDC_KEY_LIST        1001
 #define IDC_VALUE_LIST      1002
 #define IDC_EXIT_BUTTON     1003
@@ -514,12 +516,13 @@ static void DetermineSubkeyMarker(HKEY hRoot, const char *pszSubPath, int *pnHas
 {
     HKEY hKey;
     LONG lRet;
-    DWORD cSubKeys;
+    char szName[KEYNAMESIZE];
 
     *pnHasSubkeys = 0;
     *pnAccessDenied = 0;
+    *szName = 0;
 
-    lRet = RegOpenKeyExA(hRoot, pszSubPath, 0, KEY_READ, &hKey);
+    lRet = RegOpenKeyA(hRoot, pszSubPath, &hKey);
     if (lRet == ERROR_ACCESS_DENIED) {
         *pnAccessDenied = 1;
         return;
@@ -528,9 +531,8 @@ static void DetermineSubkeyMarker(HKEY hRoot, const char *pszSubPath, int *pnHas
         return;
     }
 
-    cSubKeys = 0;
-    lRet = RegQueryInfoKeyA(hKey, NULL, NULL, NULL, &cSubKeys, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
-    if (lRet == ERROR_SUCCESS && cSubKeys > 0) {
+    lRet = RegEnumKey(hKey, 0, szName, KEYNAMESIZE);
+    if (*szName) {
         *pnHasSubkeys = 1;
     }
 
@@ -545,7 +547,6 @@ static LONG InsertChildKeys(const KEYITEM *pParent, int nInsertIndex)
     DWORD cchMaxSubKey;
     DWORD cchMaxClass;
     DWORD index;
-    FILETIME ft;
     char *pszName;
     char *pszClass;
     DWORD cchNameAlloc;
@@ -554,7 +555,7 @@ static LONG InsertChildKeys(const KEYITEM *pParent, int nInsertIndex)
     pszName = NULL;
     pszClass = NULL;
 
-    lRet = RegOpenKeyExA(pParent->hRoot, pParent->pszSubPath, 0, KEY_READ, &hKey);
+    lRet = RegOpenKeyA(pParent->hRoot, pParent->pszSubPath, &hKey);
     if (lRet != ERROR_SUCCESS) {
         ShowRegistryError(g_app.hwndMain, lRet, 1);
         return lRet;
@@ -564,7 +565,11 @@ static LONG InsertChildKeys(const KEYITEM *pParent, int nInsertIndex)
     cchMaxSubKey = 0;
     cchMaxClass = 0;
     lRet = RegQueryInfoKeyA(hKey, NULL, NULL, NULL, &cSubKeys, &cchMaxSubKey, &cchMaxClass,
-                            NULL, NULL, NULL, NULL, &ft);
+                            NULL, NULL, NULL, NULL, NULL);
+    if (lRet == ERROR_CALL_NOT_IMPLEMENTED) { /* win32s hack */
+        lRet = ERROR_SUCCESS;
+        cchMaxClass = cchMaxSubKey = KEYNAMESIZE/4;
+    }
     if (lRet != ERROR_SUCCESS) {
         RegCloseKey(hKey);
         ShowRegistryError(g_app.hwndMain, lRet, 2);
@@ -591,7 +596,7 @@ static LONG InsertChildKeys(const KEYITEM *pParent, int nInsertIndex)
         cchName = cchNameAlloc;
         cchClass = cchClassAlloc;
 
-        lRet = RegEnumKeyExA(hKey, index, pszName, &cchName, NULL, pszClass, &cchClass, &ft);
+        lRet = RegEnumKeyA(hKey, index, pszName, &cchName);
         if (lRet == ERROR_MORE_DATA) {
             if (cchName + 2 > cchNameAlloc) {
                 cchNameAlloc = cchName + 2;
@@ -604,7 +609,7 @@ static LONG InsertChildKeys(const KEYITEM *pParent, int nInsertIndex)
             continue;
         }
 
-        if (lRet == ERROR_NO_MORE_ITEMS) {
+        if (lRet == ERROR_NO_MORE_ITEMS || lRet == ERROR_FILE_NOT_FOUND) {  /* win32s hack */
             lRet = ERROR_SUCCESS;
             break;
         }
@@ -730,7 +735,7 @@ static void RecomputeHorizontalExtent(HWND hwndList, HFONT hFont)
         pszText[cch] = '\0';
 
         if (hdc != NULL) {
-            GetTextExtentPoint32A(hdc, pszText, cch, &size);
+            GetTextExtentPointA(hdc, pszText, cch, &size);
             if ((int)size.cx > maxWidth) {
                 maxWidth = size.cx;
             }
@@ -927,7 +932,7 @@ static LONG PopulateValuesForKey(HKEY hRoot, const char *pszSubPath)
     FreeAllListItemData(g_app.hwndValueList, 1);
     g_app.currentValueNameWidth = NAME_DEFAULT_LEN;
 
-    lRet = RegOpenKeyExA(hRoot, pszSubPath, 0, KEY_READ, &hKey);
+    lRet = RegOpenKeyA(hRoot, pszSubPath, &hKey);
     if (lRet != ERROR_SUCCESS) {
         ShowRegistryError(g_app.hwndMain, lRet, 5);
         return lRet;
@@ -938,6 +943,10 @@ static LONG PopulateValuesForKey(HKEY hRoot, const char *pszSubPath)
     cbMaxValueData = 0;
     lRet = RegQueryInfoKeyA(hKey, NULL, NULL, NULL, NULL, NULL, NULL, &cValues,
                             &cchMaxValueName, &cbMaxValueData, NULL, NULL);
+    if (lRet == ERROR_CALL_NOT_IMPLEMENTED) { /* win32s hack */
+        lRet = ERROR_SUCCESS;
+        cchMaxValueName = cbMaxValueData = KEYNAMESIZE/4;
+    }
     if (lRet != ERROR_SUCCESS) {
         RegCloseKey(hKey);
         ShowRegistryError(g_app.hwndMain, lRet, 6);
@@ -1017,11 +1026,16 @@ RetryEnumValue:
             break;
         }
 
-        if (lRet != ERROR_SUCCESS && lRet != ERROR_MORE_DATA) {
+        if (lRet != ERROR_SUCCESS && lRet != ERROR_MORE_DATA && lRet != ERROR_CALL_NOT_IMPLEMENTED) {
             ShowRegistryError(g_app.hwndMain, lRet, 7);
             free(pszNameBuf);
             free(pbDataBuf);
             break;
+        }
+
+        if (lRet == ERROR_CALL_NOT_IMPLEMENTED) { /* win32s hack */
+            RegQueryValueA(hKey, NULL, pbDataBuf, &cbData);
+            dwType = REG_SZ;
         }
 
         if (cchName >= cchNameAlloc) {
@@ -1030,7 +1044,8 @@ RetryEnumValue:
         pszNameBuf[cchName] = '\0';
 
         temp.pszRawName = xstrdup(pszNameBuf);
-        if (temp.pszRawName[0] == '\0') {
+        if (lRet == ERROR_CALL_NOT_IMPLEMENTED || temp.pszRawName[0] == '\0') {
+            temp.pszRawName[0] = 0; /* win32s hack */
             temp.pszDisplayName = xstrdup(NAME_DEFAULT);
         } else {
             temp.pszDisplayName = xstrdup(temp.pszRawName);
@@ -1050,6 +1065,12 @@ RetryEnumValue:
         free(pszNameBuf);
         free(pbDataBuf);
         ++index;
+
+        if (lRet == ERROR_CALL_NOT_IMPLEMENTED) {
+            lRet = ERROR_SUCCESS;
+            break;
+        }
+
     }
 
     RegCloseKey(hKey);
@@ -1119,7 +1140,7 @@ static LONG QueryValueData(HKEY hRoot, const char *pszSubPath, const char *pszVa
 
     pszQueryName = (pszValueName != NULL) ? pszValueName : "";
 
-    lRet = RegOpenKeyExA(hRoot, pszSubPath, 0, KEY_READ, &hKey);
+    lRet = RegOpenKeyA(hRoot, pszSubPath, &hKey);
     if (lRet != ERROR_SUCCESS) {
         return lRet;
     }
@@ -1159,7 +1180,7 @@ static LONG WriteValueData(HKEY hRoot, const char *pszSubPath, const char *pszVa
 
     pszQueryName = (pszValueName != NULL) ? pszValueName : "";
 
-    lRet = RegOpenKeyExA(hRoot, pszSubPath, 0, KEY_WRITE, &hKey);
+    lRet = RegOpenKeyA(hRoot, pszSubPath, &hKey);
     if (lRet != ERROR_SUCCESS) {
         return lRet;
     }
@@ -1994,7 +2015,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
     }
 
     g_app.hUiFont = CreatePointFontACompat("MS Sans Serif", 825, FW_BOLD);
-    g_app.hListFont = CreatePointFontACompat("Courier New", 750, FW_BOLD);
+    g_app.hListFont = CreatePointFontACompat("Courier New", 800, FW_NORMAL);
     g_app.hIcon = LoadIconA(hInstance, MAKEINTRESOURCEA(IDI_APPICON));
 
     dwVersion = GetVersion();
