@@ -224,7 +224,7 @@ static HFONT CreatePointFontACompat(const char *pszFace, int pointX100, int nWei
     lf.lfWeight = nWeight;
     lf.lfCharSet = ANSI_CHARSET;
     lf.lfPitchAndFamily = FF_DONTCARE | DEFAULT_PITCH;
-    lstrcpynA(lf.lfFaceName, pszFace, LF_FACESIZE);
+    strncpy(lf.lfFaceName, pszFace, LF_FACESIZE);
 
     return CreateFontIndirectA(&lf);
 }
