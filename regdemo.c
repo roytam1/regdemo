@@ -535,6 +535,9 @@ static void DetermineSubkeyMarker(HKEY hRoot, const char *pszSubPath, int *pnHas
     if (*szName) {
         *pnHasSubkeys = 1;
     }
+    if (lRet == ERROR_ACCESS_DENIED) {
+        *pnAccessDenied = 1;
+    }
 
     RegCloseKey(hKey);
 }
