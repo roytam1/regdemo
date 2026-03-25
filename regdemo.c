@@ -143,6 +143,7 @@ static HFONT CreatePointFontACompat(const char *pszFace, int pointX100, int nWei
 static void FatalOutOfMemory(void);
 static void *xmalloc(size_t cb);
 static void *xrealloc(void *pv, size_t cb);
+static void xfree(void *pv);
 static char *xstrdup(const char *psz);
 static char *xstrdup_len(const char *psz, size_t cch);
 static void FreeKeyItem(KEYITEM *pItem);
@@ -242,11 +243,11 @@ static HFONT CreatePointFontACompat(const char *pszFace, int pointX100, int nWei
     return CreateFontIndirectA(&lf);
 }
 
-static void FatalOutOfMemory(void)
+static void FatalOutOfMemory(int err)
 {
-    MessageBoxA(NULL, "Out of memory", APP_TITLE, MB_OK | MB_ICONSTOP);
-    ExitProcess(ERROR_OUTOFMEMORY);
-    //__debugbreak();
+    //MessageBoxA(NULL, "Out of memory", APP_TITLE, MB_OK | MB_ICONSTOP);
+    //ExitProcess(err);
+    __debugbreak();
 }
 
 static void *xmalloc(size_t cb)
@@ -257,9 +258,9 @@ static void *xmalloc(size_t cb)
         cb = 1;
     }
 
-    pv = calloc(cb, 1);
+    pv = LocalAlloc(GMEM_FIXED, cb);
     if (pv == NULL) {
-        FatalOutOfMemory();
+        FatalOutOfMemory(GetLastError());
     }
     return pv;
 }
@@ -276,16 +277,15 @@ static void *xrealloc(void *pv, size_t cb)
         return xmalloc(cb);
     }
 
-    pNew = realloc(pv, cb);
-    if (pNew == NULL) {
-        FatalOutOfMemory();
-    }
+    pNew = xmalloc(cb);
+    memcpy(pNew, pv, LocalSize(pv));
+    xfree(pv);
     return pNew;
 }
 
 static void xfree(void *pv)
 {
-    free(pv);
+    LocalFree(pv);
 }
 
 static char *xstrdup(const char *psz)
