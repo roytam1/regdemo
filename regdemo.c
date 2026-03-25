@@ -46,7 +46,7 @@
 #endif
 
 #ifndef LONG_PTR
-#define LONG_PTR LPVOID
+#define LONG_PTR LPDWORD
 #endif
 
 #ifndef ICON_BIG
@@ -55,6 +55,19 @@
 
 #ifndef ICON_SMALL
 #define ICON_SMALL 0
+#endif
+
+#ifndef GWL_USERDATA
+#define GWL_USERDATA GWLP_USERDATA
+#endif
+
+#ifndef GWL_WNDPROC
+#define GWL_WNDPROC GWLP_WNDPROC
+#endif
+
+#ifdef _WIN64
+#define GetWindowLongA GetWindowLongPtrA
+#define SetWindowLongA SetWindowLongPtrA
 #endif
 
 typedef struct tagKEYITEM {
@@ -233,6 +246,7 @@ static void FatalOutOfMemory(void)
 {
     MessageBoxA(NULL, "Out of memory", APP_TITLE, MB_OK | MB_ICONSTOP);
     ExitProcess(ERROR_OUTOFMEMORY);
+    //__debugbreak();
 }
 
 static void *xmalloc(size_t cb)
@@ -243,7 +257,7 @@ static void *xmalloc(size_t cb)
         cb = 1;
     }
 
-    pv = malloc(cb);
+    pv = calloc(cb, 1);
     if (pv == NULL) {
         FatalOutOfMemory();
     }
@@ -258,11 +272,20 @@ static void *xrealloc(void *pv, size_t cb)
         cb = 1;
     }
 
+    if (pv == NULL) {
+        return xmalloc(cb);
+    }
+
     pNew = realloc(pv, cb);
     if (pNew == NULL) {
         FatalOutOfMemory();
     }
     return pNew;
+}
+
+static void xfree(void *pv)
+{
+    free(pv);
 }
 
 static char *xstrdup(const char *psz)
@@ -295,16 +318,16 @@ static char *xstrdup_len(const char *psz, size_t cch)
 static void FreeKeyItem(KEYITEM *pItem)
 {
     if (pItem != NULL) {
-        free(pItem->pszSubPath);
-        free(pItem);
+        xfree(pItem->pszSubPath);
+        xfree(pItem);
     }
 }
 
 static void FreeValueItem(VALUEITEM *pItem)
 {
     if (pItem != NULL) {
-        free(pItem->pszValueName);
-        free(pItem);
+        xfree(pItem->pszValueName);
+        xfree(pItem);
     }
 }
 
@@ -550,13 +573,11 @@ static LONG InsertChildKeys(const KEYITEM *pParent, int nInsertIndex)
     DWORD cUnused;
     DWORD cSubKeys;
     DWORD cchMaxSubKey;
-    DWORD cchMaxClass;
     char *pszName;
     char *pszClass;
     char szClassName[64];
     DWORD cchClassLen = 64;
     DWORD cchNameAlloc;
-    DWORD cchClassAlloc;
     FILETIME ft;
 
     pszName = NULL;
@@ -570,12 +591,11 @@ static LONG InsertChildKeys(const KEYITEM *pParent, int nInsertIndex)
 
     cSubKeys = 0;
     cchMaxSubKey = 0;
-    cchMaxClass = 0;
-    lRet = RegQueryInfoKeyA(hKey, (LPSTR)szClassName, &cchClassLen, NULL, &cSubKeys, &cchMaxSubKey, &cchMaxClass,
+    lRet = RegQueryInfoKeyA(hKey, (LPSTR)szClassName, &cchClassLen, NULL, &cSubKeys, &cchMaxSubKey, &cUnused,
                             &cUnused, &cUnused, &cUnused, &cUnused, &ft);
     if (lRet == ERROR_CALL_NOT_IMPLEMENTED) { /* win32s hack */
         lRet = ERROR_SUCCESS;
-        cchMaxClass = cchMaxSubKey = KEYNAMESIZE/4;
+        cchMaxSubKey = KEYNAMESIZE/4;
     }
     if (lRet != ERROR_SUCCESS) {
         RegCloseKey(hKey);
@@ -587,13 +607,8 @@ static LONG InsertChildKeys(const KEYITEM *pParent, int nInsertIndex)
     if (cchNameAlloc < 2) {
         cchNameAlloc = 2;
     }
-    cchClassAlloc = cchMaxClass + 2;
-    if (cchClassAlloc < 2) {
-        cchClassAlloc = 2;
-    }
 
     pszName = (char *)xmalloc(cchNameAlloc);
-    pszClass = (char *)xmalloc(cchClassAlloc);
 
     index = 0;
     for (;;) {
@@ -601,17 +616,12 @@ static LONG InsertChildKeys(const KEYITEM *pParent, int nInsertIndex)
         DWORD cchClass;
 
         cchName = cchNameAlloc;
-        cchClass = cchClassAlloc;
 
         lRet = RegEnumKeyA(hKey, index, pszName, cchName);
         if (lRet == ERROR_MORE_DATA) {
             if (cchName + 2 > cchNameAlloc) {
                 cchNameAlloc = cchName + 2;
                 pszName = (char *)xrealloc(pszName, cchNameAlloc);
-            }
-            if (cchClass + 2 > cchClassAlloc) {
-                cchClassAlloc = cchClass + 2;
-                pszClass = (char *)xrealloc(pszClass, cchClassAlloc);
             }
             continue;
         }
@@ -657,22 +667,21 @@ static LONG InsertChildKeys(const KEYITEM *pParent, int nInsertIndex)
             listIndex = SendMessageA(g_app.hwndKeyList, LB_INSERTSTRING, (WPARAM)nInsertIndex, (LPARAM)pszDisplay);
             if (listIndex == LB_ERR || listIndex == LB_ERRSPACE) {
                 FreeKeyItem(pChild);
-                free(pszDisplay);
+                xfree(pszDisplay);
                 lRet = ERROR_OUTOFMEMORY;
                 ShowRegistryError(g_app.hwndMain, lRet, 4);
                 break;
             }
 
             SendMessageA(g_app.hwndKeyList, LB_SETITEMDATA, (WPARAM)listIndex, (LPARAM)pChild);
-            free(pszDisplay);
+            xfree(pszDisplay);
             ++nInsertIndex;
         }
 
         ++index;
     }
 
-    free(pszName);
-    free(pszClass);
+    xfree(pszName);
     RegCloseKey(hKey);
     return lRet;
 }
@@ -748,7 +757,7 @@ static void RecomputeHorizontalExtent(HWND hwndList, HFONT hFont)
             }
         }
 
-        free(pszText);
+        xfree(pszText);
     }
 
     if (hdc != NULL) {
@@ -900,7 +909,7 @@ static char *FormatValueDisplay(DWORD dwType, const BYTE *pbData, DWORD cbData)
     }
 
     if (pszOut[0] == '\0') {
-        free(pszOut);
+        xfree(pszOut);
         pszOut = xstrdup("(value not set)");
     }
 
@@ -1032,15 +1041,15 @@ RetryEnumValue:
 
         if (lRet == ERROR_NO_MORE_ITEMS) {
             lRet = ERROR_SUCCESS;
-            free(pszNameBuf);
-            free(pbDataBuf);
+            xfree(pszNameBuf);
+            xfree(pbDataBuf);
             break;
         }
 
         if (lRet != ERROR_SUCCESS && lRet != ERROR_MORE_DATA && lRet != ERROR_CALL_NOT_IMPLEMENTED) {
             ShowRegistryError(g_app.hwndMain, lRet, 7);
-            free(pszNameBuf);
-            free(pbDataBuf);
+            xfree(pszNameBuf);
+            xfree(pbDataBuf);
             break;
         }
 
@@ -1073,8 +1082,8 @@ RetryEnumValue:
         }
 
         AppendTempValue(&pItems, &nCount, &nCapacity, &temp);
-        free(pszNameBuf);
-        free(pbDataBuf);
+        xfree(pszNameBuf);
+        xfree(pbDataBuf);
         ++index;
 
         if (lRet == ERROR_CALL_NOT_IMPLEMENTED) {
@@ -1113,7 +1122,7 @@ RetryEnumValue:
         if (listIndex == LB_ERR || listIndex == LB_ERRSPACE) {
             FreeValueItem(pValue);
             pItems[i].pszRawName = NULL;
-            free(pszRow);
+            xfree(pszRow);
             lRet = ERROR_OUTOFMEMORY;
             ShowRegistryError(g_app.hwndMain, lRet, 8);
             break;
@@ -1121,17 +1130,17 @@ RetryEnumValue:
 
         SendMessageA(g_app.hwndValueList, LB_SETITEMDATA, (WPARAM)listIndex, (LPARAM)pValue);
 
-        free(pszRow);
-        free(pItems[i].pszDisplayName);
-        free(pItems[i].pszDisplayData);
+        xfree(pszRow);
+        xfree(pItems[i].pszDisplayName);
+        xfree(pItems[i].pszDisplayData);
     }
 
     for (; i < nCount; ++i) {
-        free(pItems[i].pszRawName);
-        free(pItems[i].pszDisplayName);
-        free(pItems[i].pszDisplayData);
+        xfree(pItems[i].pszRawName);
+        xfree(pItems[i].pszDisplayName);
+        xfree(pItems[i].pszDisplayData);
     }
-    free(pItems);
+    xfree(pItems);
 
     RecomputeHorizontalExtent(g_app.hwndValueList, g_app.hListFont);
     return lRet;
@@ -1170,7 +1179,7 @@ static LONG QueryValueData(HKEY hRoot, const char *pszSubPath, const char *pszVa
         pbData = (BYTE *)xmalloc(cbData + 1);
         lRet = RegQueryValueExA(hKey, pszQueryName, NULL, pdwType, pbData, &cbData);
         if (lRet != ERROR_SUCCESS) {
-            free(pbData);
+            xfree(pbData);
             RegCloseKey(hKey);
             return lRet;
         }
@@ -1311,7 +1320,7 @@ static void ConvertEditValueBase(EDITCTX *pCtx, int nNewBase)
         char *pszHex;
         pszHex = DwordToHexText(dwValue);
         SetWindowTextA(pCtx->hwndValueData, pszHex);
-        free(pszHex);
+        xfree(pszHex);
     } else {
         sprintf(szText, "%lu", (unsigned long)dwValue);
         SetWindowTextA(pCtx->hwndValueData, szText);
@@ -1424,7 +1433,7 @@ static int DoEditValueModal(HWND hwndOwner, HKEY hRoot, const char *pszSubPath, 
                   "This Demo only supports editing of values with types of REG_SZ and REG_DWORD.  This value is of type %s.",
                   pszTypeName);
         MessageBoxA(hwndOwner, szMessage, APP_TITLE, MB_OK | MB_ICONINFORMATION);
-        free(pbData);
+        xfree(pbData);
         return IDCANCEL;
     }
 
@@ -1451,7 +1460,7 @@ static int DoEditValueModal(HWND hwndOwner, HKEY hRoot, const char *pszSubPath, 
         ctx.pszInitialText = xstrdup_len((const char *)pbData, cbData ? (size_t)(cbData - (pbData[cbData - 1] == 0 ? 1 : 0)) : 0);
     }
 
-    free(pbData);
+    xfree(pbData);
 
     dwStyle = WS_CAPTION | WS_POPUP | WS_SYSMENU | WS_CLIPCHILDREN | WS_CLIPSIBLINGS;
     dwExStyle = WS_EX_DLGMODALFRAME | WS_EX_CONTROLPARENT;
@@ -1475,9 +1484,9 @@ static int DoEditValueModal(HWND hwndOwner, HKEY hRoot, const char *pszSubPath, 
                                &ctx);
 
     if (ctx.hwnd == NULL) {
-        free(ctx.pszSubPath);
-        free(ctx.pszValueName);
-        free(ctx.pszInitialText);
+        xfree(ctx.pszSubPath);
+        xfree(ctx.pszValueName);
+        xfree(ctx.pszInitialText);
         return IDCANCEL;
     }
 
@@ -1507,9 +1516,9 @@ static int DoEditValueModal(HWND hwndOwner, HKEY hRoot, const char *pszSubPath, 
     SetActiveWindow(hwndOwner);
     SetForegroundWindow(hwndOwner);
 
-    free(ctx.pszSubPath);
-    free(ctx.pszValueName);
-    free(ctx.pszInitialText);
+    xfree(ctx.pszSubPath);
+    xfree(ctx.pszValueName);
+    xfree(ctx.pszInitialText);
     return ctx.nResult;
 }
 
@@ -1718,7 +1727,7 @@ static LRESULT CALLBACK MainWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM 
                         SendMessageA(g_app.hwndValueList, LB_SETCURSEL, (WPARAM)nIndex, 0);
                     }
                 }
-                free(pszValueNameCopy);
+                xfree(pszValueNameCopy);
                 return 0;
             }
             break;
@@ -1766,7 +1775,7 @@ static LRESULT CALLBACK EditWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM 
 
             pcs = (CREATESTRUCTA *)lParam;
             pCtx = (EDITCTX *)pcs->lpCreateParams;
-            SetWindowLongA(hwnd, GWL_USERDATA, (LONG)pCtx);
+            SetWindowLongA(hwnd, GWL_USERDATA, (LONG_PTR)pCtx);
             pCtx->hwnd = hwnd;
 
             xLabel = TwipsX(360);
@@ -1823,8 +1832,8 @@ static LRESULT CALLBACK EditWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM 
                                             xGroup + TwipsX(360), yGroup + TwipsY(540), TwipsX(1512), TwipsY(252),
                                             hwnd, (HMENU)IDC_RADIO_DEC, g_app.hInstance, NULL);
 
-            g_app.groupBoxDefProc = (WNDPROC)GetWindowLong(pCtx->hwndGroup, GWL_WNDPROC);
-            SetWindowLong(pCtx->hwndGroup, GWL_WNDPROC, (LPARAM)GroupBoxWndProc);
+            g_app.groupBoxDefProc = (WNDPROC)GetWindowLongA(pCtx->hwndGroup, GWL_WNDPROC);
+            SetWindowLongA(pCtx->hwndGroup, GWL_WNDPROC, (LPARAM)GroupBoxWndProc);
 
             ApplyUiFontToChildren(hwnd);
 
