@@ -70,6 +70,34 @@
 #define SetWindowLongA SetWindowLongPtrA
 #endif
 
+#ifndef BST_UNCHECKED
+#define BST_UNCHECKED 1
+#endif
+
+#ifndef BST_CHECKED
+#define BST_CHECKED 1
+#endif
+
+#ifndef WS_EX_CONTROLPARENT
+#define WS_EX_CONTROLPARENT 0x00010000L
+#endif
+
+#ifndef WM_SETICON
+#define WM_SETICON 0x0080
+#endif
+
+#ifndef WM_APP
+#define WM_APP 0x8000
+#endif
+
+#ifndef HKEY_CURRENT_CONFIG
+#define HKEY_CURRENT_CONFIG         (( HKEY ) 0x80000005 )
+#endif
+
+#ifndef HKEY_DYN_DATA
+#define HKEY_DYN_DATA               (( HKEY ) 0x80000006 )
+#endif
+
 typedef struct tagKEYITEM {
     HKEY hRoot;
     char *pszSubPath;
@@ -184,6 +212,10 @@ static LRESULT CALLBACK MainWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM 
 static LRESULT CALLBACK EditWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 static LRESULT CALLBACK GroupBoxWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
+int WINAPI _imp__MessageBoxA(HWND hWnd, LPCSTR lpText, LPCSTR lpCaption, UINT uType) {
+    return MessageBoxExA(hWnd, lpText, lpCaption, uType, 0);
+}
+
 static int TwipsX(int twips)
 {
     return MulDiv(twips, g_app.dpiX, 1440);
@@ -245,7 +277,7 @@ static HFONT CreatePointFontACompat(const char *pszFace, int pointX100, int nWei
 
 static void FatalOutOfMemory(void)
 {
-    MessageBoxA(NULL, "Out of memory", APP_TITLE, MB_OK | MB_ICONSTOP);
+    MessageBoxExA(NULL, "Out of memory", APP_TITLE, MB_OK | MB_ICONSTOP, 0);
     ExitProcess(ERROR_OUTOFMEMORY);
     //__debugbreak();
 }
@@ -487,7 +519,7 @@ static const char *RegistryErrorText(LONG lError, int id)
 
 static void ShowRegistryError(HWND hwndOwner, LONG lError, int id)
 {
-    MessageBoxA(hwndOwner, RegistryErrorText(lError, id), APP_TITLE, MB_OK | MB_ICONEXCLAMATION);
+    MessageBoxExA(hwndOwner, RegistryErrorText(lError, id), APP_TITLE, MB_OK | MB_ICONEXCLAMATION, 0);
 }
 
 static char *JoinSubPath(const char *pszParent, const char *pszChild)
@@ -598,7 +630,7 @@ static LONG InsertChildKeys(const KEYITEM *pParent, int nInsertIndex)
                             &cUnused, &cUnused, &cUnused, &cUnused, &ft);
     if (lRet == ERROR_CALL_NOT_IMPLEMENTED) { /* win32s hack */
         lRet = ERROR_SUCCESS;
-        cchMaxSubKey = KEYNAMESIZE/4;
+        cchMaxSubKey = KEYNAMESIZE/3;
     }
     if (lRet != ERROR_SUCCESS) {
         RegCloseKey(hKey);
@@ -639,7 +671,7 @@ static LONG InsertChildKeys(const KEYITEM *pParent, int nInsertIndex)
             break;
         }
 
-        pszName[cchName] = '\0';
+        //pszName[cchName] = '\0';
 
         {
             char *pszFullPath;
@@ -968,7 +1000,7 @@ static LONG PopulateValuesForKey(HKEY hRoot, const char *pszSubPath)
                             &cchMaxValueName, &cbMaxValueData, &cUnused, &ft);
     if (lRet == ERROR_CALL_NOT_IMPLEMENTED) { /* win32s hack */
         lRet = ERROR_SUCCESS;
-        cchMaxValueName = cbMaxValueData = KEYNAMESIZE/4;
+        cchMaxValueName = cbMaxValueData = KEYNAMESIZE/3;
     }
     if (lRet != ERROR_SUCCESS) {
         RegCloseKey(hKey);
@@ -1165,12 +1197,14 @@ static LONG QueryValueData(HKEY hRoot, const char *pszSubPath, const char *pszVa
 
     lRet = RegOpenKeyA(hRoot, pszSubPath, &hKey);
     if (lRet != ERROR_SUCCESS) {
+        ShowRegistryError(g_app.hwndMain, lRet, 9);
         return lRet;
     }
 
     cbData = 0;
     lRet = RegQueryValueExA(hKey, pszQueryName, NULL, pdwType, NULL, &cbData);
-    if (lRet != ERROR_SUCCESS) {
+    if (lRet != ERROR_SUCCESS && lRet != ERROR_MORE_DATA) {
+        ShowRegistryError(g_app.hwndMain, lRet, 10);
         RegCloseKey(hKey);
         return lRet;
     }
@@ -1184,6 +1218,7 @@ static LONG QueryValueData(HKEY hRoot, const char *pszSubPath, const char *pszVa
         if (lRet != ERROR_SUCCESS) {
             xfree(pbData);
             RegCloseKey(hKey);
+            ShowRegistryError(g_app.hwndMain, lRet, 11);
             return lRet;
         }
         pbData[cbData] = 0;
@@ -1420,7 +1455,7 @@ static int DoEditValueModal(HWND hwndOwner, HKEY hRoot, const char *pszSubPath, 
 
     lRet = QueryValueData(hRoot, pszSubPath, pValueItem->pszValueName, &dwType, &pbData, &cbData);
     if (lRet != ERROR_SUCCESS) {
-        ShowRegistryError(hwndOwner, lRet, 9);
+        //ShowRegistryError(hwndOwner, lRet, 12);
         return IDCANCEL;
     }
 
@@ -1435,7 +1470,7 @@ static int DoEditValueModal(HWND hwndOwner, HKEY hRoot, const char *pszSubPath, 
         wsprintfA(szMessage,
                   "This Demo only supports editing of values with types of REG_SZ and REG_DWORD.  This value is of type %s.",
                   pszTypeName);
-        MessageBoxA(hwndOwner, szMessage, APP_TITLE, MB_OK | MB_ICONINFORMATION);
+        MessageBoxExA(hwndOwner, szMessage, APP_TITLE, MB_OK | MB_ICONINFORMATION, 0);
         xfree(pbData);
         return IDCANCEL;
     }
@@ -1645,6 +1680,7 @@ static LRESULT CALLBACK MainWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM 
 
             if (id == IDC_EXIT_BUTTON && notify == BN_CLICKED) {
                 PostMessage(hwnd, WM_CLOSE, 0, 0);
+                ExitProcess(0);
                 return 0;
             }
 
@@ -1924,8 +1960,8 @@ static LRESULT CALLBACK EditWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM 
                             BYTE rgbValue[4];
 
                             if (!ParseUnsignedDword(szText, (pCtx->nCurrentBase == 0) ? 16 : 10, &dwValue)) {
-                                MessageBoxA(hwnd, "The DWORD value is not a valid number.", APP_TITLE,
-                                            MB_OK | MB_ICONEXCLAMATION);
+                                MessageBoxExA(hwnd, "The DWORD value is not a valid number.", APP_TITLE,
+                                            MB_OK | MB_ICONEXCLAMATION, 0);
                                 return 0;
                             }
 
