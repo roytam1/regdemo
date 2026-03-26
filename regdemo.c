@@ -493,6 +493,7 @@ static char *JoinSubPath(const char *pszParent, const char *pszChild)
 {
     size_t cchParent;
     size_t cchChild;
+    size_t cchJoined;
     char *pszJoined;
 
     if (pszParent == NULL || pszParent[0] == '\0') {
@@ -501,7 +502,8 @@ static char *JoinSubPath(const char *pszParent, const char *pszChild)
 
     cchParent = strlen(pszParent);
     cchChild = strlen(pszChild);
-    pszJoined = (char *)xmalloc(cchParent + 1 + cchChild + 1);
+    cchJoined = cchParent + 1 + cchChild + 1;
+    pszJoined = (char *)xmalloc(cchJoined < KEYNAMESIZE ? KEYNAMESIZE : cchJoined);
 
     memcpy(pszJoined, pszParent, cchParent);
     pszJoined[cchParent] = '\\';
@@ -604,8 +606,8 @@ static LONG InsertChildKeys(const KEYITEM *pParent, int nInsertIndex)
     }
 
     cchNameAlloc = cchMaxSubKey + 2;
-    if (cchNameAlloc < 2) {
-        cchNameAlloc = 2;
+    if (cchNameAlloc < KEYNAMESIZE) {
+        cchNameAlloc = KEYNAMESIZE;
     }
 
     pszName = (char *)xmalloc(cchNameAlloc);
